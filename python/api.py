@@ -11,7 +11,8 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 env_path = project_root / '.env'
 load_dotenv(dotenv_path=env_path)
-
+print(f"[Init] Computed env_path: {env_path}")
+print(f"[Init] Absolute path: {env_path.absolute()}")
 print(f"[Init] Loading .env from: {env_path}")
 print(f"[Init] .env exists: {env_path.exists()}")
 
@@ -281,7 +282,48 @@ def chat():
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
-
+@app.route('/api/text', methods=['POST'])
+def text_chat():
+    """Handle text message input and return LLM response"""
+    try:
+        print("\n[API] Received text chat request")
+        
+        # Get JSON data
+        data = request.get_json()
+        if not data or 'message' not in data:
+            print("[API] Error: No message in request")
+            return jsonify({"error": "No message provided"}), 400
+        
+        user_text = data.get('message', '').strip()
+        session_id = data.get('session_id', 'default')
+        case_study = data.get('case_study', 'template1')
+        
+        print(f"[API] Session: {session_id}, Case Study: {case_study}")
+        print(f"[API] User message: {user_text}")
+        
+        # Initialize conversation if new session
+        if session_id not in conversations:
+            print(f"[API] Creating new conversation for session {session_id}")
+            conversations[session_id] = [
+                {"role": "system", "content": get_system_prompt(case_study)}
+            ]
+        
+        # Get LLM response
+        print("[API] Getting LLM response...")
+        reply = get_chatbot_reply(conversations[session_id], user_text, case_study)
+        print(f"[API] Reply: {reply}")
+        
+        return jsonify({
+            "message": user_text,
+            "reply": reply
+        })
+    
+    except Exception as e:
+        print(f"[API] EXCEPTION: {type(e).__name__}: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+    
 @app.route('/api/audio/<session_id>', methods=['GET'])
 def get_audio(session_id):
     """Serve the generated audio file"""

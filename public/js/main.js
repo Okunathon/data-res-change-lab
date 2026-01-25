@@ -186,7 +186,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // Function to send text message
-    function sendMessage() {
+    /*function sendMessage() {
         const message = userInput.value.trim();
         if (!message) return;
         
@@ -202,7 +202,39 @@ document.addEventListener('DOMContentLoaded', () => {
             addMessage("cool!", false);
         }, 1000);
     }
+    */
+   async function sendTextMessage() {
+    const message = userInput.value.trim();
+    if (!message) return;
     
+    addMessage(message, true);
+    userInput.value = '';
+    
+    showLoading();
+    
+    try {
+        const response = await fetch(`${API_URL}/api/text`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                message: message,
+                session_id: SESSION_ID,
+                case_study: studyKey
+            })
+        });
+        
+        if (!response.ok) throw new Error('API request failed');
+        
+        const data = await response.json();
+        removeLoading();
+        addMessage(data.reply, false);
+        aiResponses.push(data.reply);
+        
+    } catch (error) {
+        removeLoading();
+        addMessage(`Error: ${error.message}`, false);
+    }
+}
     // Function to send voice message to API
     async function sendVoiceMessage(audioBlob) {
         try {
@@ -395,11 +427,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     // Text input event listeners
-    sendButton.addEventListener('click', sendMessage);
+    sendButton.addEventListener('click', sendTextMessage);
     userInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
-            sendMessage();
+            sendTextMessage();
         }
     });
     
