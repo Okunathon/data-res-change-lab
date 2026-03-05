@@ -11,6 +11,7 @@ app.use(express.urlencoded({ extended: true }));
 // Serve static files (css, js)
 app.use('/css', express.static(path.join(__dirname, 'public/css')));
 app.use('/js', express.static(path.join(__dirname, 'public/js')));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Serve HTML files
 app.get('/', (req, res) => {

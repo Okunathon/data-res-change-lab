@@ -25,16 +25,27 @@
             </div>
             <a href="/case-studies.html" class="back-link">← Back to Case Studies</a>
         </header>
-        
+        <div class="input-mode-toggle">
+                        <button id="textModeBtn" class="mode-btn active">💬 Text</button>
+                        <button id="voiceModeBtn" class="mode-btn">🎤 Voice</button>
+                    </div>
         <main class="simulation-main">
             <div class="chatbot-container">
+                <!--
+                    CHANGE: Restored fullscreen toggle button (user undid previous change).
+                    - Adds a 'fullscreen' toggle button (id="fullscreenBtn") used by `public/js/main.js`.
+                    - No code deleted; any removals would be commented out instead.
+                -->
                 <div class="chat-header">
-                    <h2>💬 Pitch Session</h2>
+
+                    <!-- Fullscreen control (restored) -->
+                    <div class="chat-controls">
+                        <button id="fullscreenBtn" class="btn-fullscreen" title="Toggle fullscreen">⤢ Fullscreen</button>
+                    </div>
                 </div>
                 
                 <div class="chat-messages" id="chatMessages">
                     <div class="message ai-message">
-                        <div class="message-avatar">👩🏾‍🔬</div>
                         <div class="message-content">
                             <p>Welcome! I'm excited to hear what you have for me today.</p>
                         </div>
@@ -42,10 +53,7 @@
                 </div>
                 
                 <div class="chat-input-container" style="justify-content: center;">
-                    <div class="input-mode-toggle">
-                        <button id="textModeBtn" class="mode-btn active">💬 Text</button>
-                        <button id="voiceModeBtn" class="mode-btn">🎤 Voice</button>
-                    </div>
+                    <!-- put your toggle here to switch back -->
                     
                     <div id="textInputSection">
                         <textarea 

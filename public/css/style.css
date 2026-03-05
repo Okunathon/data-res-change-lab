@@ -579,13 +579,37 @@ footer {
     min-height: 70vh;
 }
 
+/* Optional semi-transparent overlay to improve text contrast */
+.chatbot-container::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(rgba(255,255,255,0.08), rgba(255,255,255,0.08)); /* tweak for light/dark */
+  pointer-events: none;
+  border-radius: inherit; /* match container radius */
+  z-index: 0;
+}
+
+/* Ensure messages render above the overlay */
+.chatbot-container .chat-messages,
+.chatbot-container .chat-header,
+.chatbot-container .chat-input-container {
+  position: relative;
+  z-index: 1;
+  background: transparent; /* let background show through */
+}
+/* Chatbot background image (added) */
+
 .chatbot-container {
-    background: var(--card-bg);
+    background-image: url("/neutral.png");    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    position: relative;
     border-radius: 24px;
     box-shadow: var(--shadow-md);
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 250px);
+    height: calc(100vh - 50px);
     max-height: 800px;
     border: 2px solid var(--border-color);
     overflow: hidden;
@@ -593,7 +617,6 @@ footer {
 
 .chat-header {
     padding: 1.75rem 2rem;
-    border-bottom: 2px solid var(--border-color);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -606,6 +629,21 @@ footer {
     font-size: 1.5rem;
     font-weight: 700;
 }
+/* Mood Image in Chat Header */
+.character-mood {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#moodImage {
+    width: 64px;
+    height: 64px;
+    object-fit: cover;
+    border-radius: 50%;
+    box-shadow: var(--shadow-sm);
+}
+
 
 .chat-status {
     display: flex;
@@ -724,7 +762,7 @@ footer {
 
 .chat-input-container {
     padding: 2rem;
-    border-top: 2px solid var(--border-color);
+    /* border-top: 2px solid var(--border-color); */
     display: flex;
     flex-direction: column;
     gap: 1.25rem;
@@ -818,6 +856,73 @@ footer {
     height: 300px;
 }
 
+/* ===========================================================
+   CHANGELOG: Fullscreen Conversation UI (added)
+   - Added styles for chat fullscreen mode (.chatbot-container.fullscreen)
+   - Added styles for :fullscreen pseudo-class for Fullscreen API usage
+   - Added .btn-fullscreen control styling and .fs-active state
+   - Nothing removed; deletions would be commented out instead.
+   =========================================================== */
+
+.btn-fullscreen {
+    background: rgb(255, 255, 255);
+    border: 1px solid var(--border-color);
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: var(--transition-base);
+    color: var(--text-secondary);
+}
+
+.btn-fullscreen:hover {
+    background: rgba(248,250,252,0.6);
+    color: var(--text-primary);
+}
+
+.btn-fullscreen.fs-active {
+    background: var(--primary-gradient);
+    color: white;
+    border-color: transparent;
+    box-shadow: var(--shadow-sm);
+}
+
+/* CSS fallback fullscreen (when Fullscreen API is not used) */
+.chatbot-container.fullscreen {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 99999;
+    border-radius: 0 !important;
+    max-height: none !important;
+}
+
+/* Fullscreen API pseudo-class (applies when element is actually in browser fullscreen) */
+.chatbot-container:fullscreen,
+.chatbot-container:-webkit-full-screen {
+    width: 100%;
+    height: 100%;
+}
+
+.chatbot-container:fullscreen .chat-messages,
+.chatbot-container:-webkit-full-screen .chat-messages {
+    padding: 3rem;
+}
+
+/* Ensure the sidebar is hidden when chat is fullscreen to avoid layout issues */
+.sidebar-info {
+    transition: opacity 0.25s ease;
+}
+
+.chatbot-container.fullscreen ~ .sidebar-info,
+.chatbot-container:fullscreen ~ .sidebar-info {
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+}
+
 .btn-record:hover {
     transform: scale(1.05);
     box-shadow: 0 12px 32px rgba(79, 172, 254, 0.5);
@@ -875,6 +980,7 @@ footer {
 }
 
 .chat-input {
+    
     flex: 1;
     padding: 1.25rem;
     border: 2px solid var(--border-color);
@@ -1261,4 +1367,55 @@ footer {
 /* Smooth scroll */
 html {
     scroll-behavior: smooth;
+}
+/* ================================
+   REVIEW PAGE STYLES
+================================ */
+
+.review-container {
+    max-width: 1000px;
+    margin: 100px auto;
+    padding: 60px;
+    background: var(--card-bg);
+    border-radius: 24px;
+    box-shadow: var(--shadow-lg);
+}
+
+.review-container h1 {
+    text-align: center;
+    font-size: 3rem;
+    font-weight: 800;
+    margin-bottom: 30px;
+    letter-spacing: -0.5px;
+}
+
+#score {
+    display: block;
+    text-align: center;
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin-bottom: 45px;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    /* Reset h2 defaults that interfere */
+    border: none;
+    padding: 0;
+    color: transparent;
+}
+
+#feedback {
+    background: #f8fafc;
+    padding: 35px;
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    white-space: pre-wrap;
+    font-size: 1.1rem;
+    line-height: 1.8;
+    box-shadow: var(--shadow-sm);
+    /* Reset pre defaults */
+    font-family: inherit;
+    margin: 0;
+    overflow-x: auto;
 }

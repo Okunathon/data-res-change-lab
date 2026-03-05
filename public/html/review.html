@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Game Review</title>
+
+<link rel="stylesheet" href="/css/style.css">
+
+</head>
+
+<body>
+
+<div class="review-container">
+
+<h1>Game Review</h1>
+
+<h2 id="score">Loading score...</h2>
+
+<pre id="feedback">Generating review...</pre>
+
+</div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const sessionId = params.get("session");
+
+fetch(`http://localhost:8080/api/final_review/${sessionId}`)
+  .then(res => res.json())
+  .then(data => {
+      console.log("REVIEW DATA:", data);
+
+      document.getElementById("score").textContent =
+          `Score: ${data.score}`;
+
+      document.getElementById("feedback").textContent =
+          data.feedback;
+  })
+  .catch(err => {
+      console.error(err);
+  });
+</script>
+
+</body>
+</html>

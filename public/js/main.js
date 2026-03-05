@@ -13,10 +13,14 @@ const caseStudyTitles = {
 
 // API Configuration
 const API_URL = 'http://localhost:8080';
-const SESSION_ID = `session_${Date.now()}`;
+let SESSION_ID = localStorage.getItem("session_id");
 
+if (!SESSION_ID) {
+    SESSION_ID = `session_${Date.now()}`;
+    localStorage.setItem("session_id", SESSION_ID);
+}
 // Audio recording variables
-let mediaRecorder;
+let mediaRecorder; 
 let audioChunks = [];
 let isRecording = false;
 let recordingStartTime = 0;
@@ -80,6 +84,19 @@ document.addEventListener('DOMContentLoaded', () => {
         textInputSection.style.display = 'none';
         voiceInputSection.style.display = 'block';
     });
+    // mood updater
+    function updateMood(mood) {
+        console.log('updateMood called with:', mood);
+        const container = document.querySelector('.chatbot-container');
+        console.log('container found:', container);
+        if (!container) return;
+
+        const valid = ['happy', 'sad', 'neutral'];
+        if (!valid.includes(mood)) mood = 'neutral';
+
+        container.style.backgroundImage = `url("/${mood}.png")`;
+        console.log('background set to:', container.style.backgroundImage);
+    }
     
     // Function to add a message to the chat
     function addMessage(content, isUser = false) {
@@ -203,15 +220,38 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1000);
     }
     */
+   function endConversation() {
+
+    // remove the textarea
+    const textarea = document.getElementById("userInput");
+    if (textarea) textarea.remove();
+
+    // make button full width
+    sendButton.style.width = "100%";
+    sendButton.style.display = "block";
+
+    // change button behavior
+    sendButton.textContent = "Review how your game went";
+    sendButton.onclick = () => {
+    window.open(`/review.html?session=${SESSION_ID}&study=${studyKey}`, "_blank");              };
+}
    async function sendTextMessage() {
     const message = userInput.value.trim();
     if (!message) return;
-    
+
+    // Flag if the user said "surfing"
+    // const userSaidSurfing = message.toLowerCase().includes("surfing");
+    // if (userSaidSurfing) {
+    //         addMessage(message, true);
+    //         addMessage("We are done here.", false);
+    //         userInput.disabled = true;
+    //         sendButton.disabled = true;
+    //         return;
+    //     }
     addMessage(message, true);
     userInput.value = '';
-    
     showLoading();
-    
+
     try {
         const response = await fetch(`${API_URL}/api/text`, {
             method: 'POST',
@@ -222,19 +262,36 @@ document.addEventListener('DOMContentLoaded', () => {
                 case_study: studyKey
             })
         });
-        
+
         if (!response.ok) throw new Error('API request failed');
-        
+
         const data = await response.json();
+        console.log('API response:', data);
+        console.log('mood:', data.mood);
         removeLoading();
-        addMessage(data.reply, false);
-        aiResponses.push(data.reply);
+        const reply = data.reply;
+        if (data.conversation_complete || reply.trim().startsWith("[DONE]")) {
+            const clean = reply.replace(/^\[DONE\]\s*/, "");
+            addMessage(clean, false);
+            updateMood(data.mood);
+            endConversation();
+            return;
+        } 
+
+        // ADD THIS: if user mentioned surfing, end AFTER showing reply
+        addMessage(reply, false);
+
         
+        updateMood(data.mood); // ADD THIS
+
+        aiResponses.push(reply);
+
     } catch (error) {
         removeLoading();
         addMessage(`Error: ${error.message}`, false);
     }
 }
+
     // Function to send voice message to API
     async function sendVoiceMessage(audioBlob) {
         try {
@@ -561,4 +618,80 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
     }
+
+    /* ===========================================================
+       CHANGE: Conversation Fullscreen Toggle (added)
+       - Added a fullscreen toggle button ('#fullscreenBtn') in the HTML.
+       - Implements Fullscreen API with fallbacks and sync with CSS class '.fullscreen'.
+       - Added event handlers and 'fullscreenchange' listener to update UI state.
+       - NOTE: No code was deleted; future deletions will be commented out instead.
+       =========================================================== */
+
+    // Fullscreen support for the chat conversation
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+    const chatContainer = document.querySelector('.chatbot-container');
+
+    async function enterFullscreen(targetEl = chatContainer) {
+        if (!targetEl) return;
+        try {
+            if (targetEl.requestFullscreen) {
+                await targetEl.requestFullscreen();
+            } else if (targetEl.webkitRequestFullscreen) {
+                await targetEl.webkitRequestFullscreen();
+            } else {
+                // Fallback: toggle CSS fullscreen class
+                targetEl.classList.add('fullscreen');
+            }
+            fullscreenBtn && fullscreenBtn.classList.add('fs-active');
+        } catch (err) {
+            console.error('Fullscreen request failed:', err);
+            // Fallback to CSS class
+            if (chatContainer) chatContainer.classList.add('fullscreen');
+        }
+    }
+
+    async function exitFullscreen() {
+        try {
+            if (document.fullscreenElement || document.webkitIsFullScreen) {
+                if (document.exitFullscreen) {
+                    await document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    await document.webkitExitFullscreen();
+                }
+            } else {
+                // If not in native fullscreen, remove CSS class
+                if (chatContainer) chatContainer.classList.remove('fullscreen');
+            }
+        } catch (err) {
+            console.error('Exiting fullscreen failed:', err);
+            if (chatContainer) chatContainer.classList.remove('fullscreen');
+        } finally {
+            fullscreenBtn && fullscreenBtn.classList.remove('fs-active');
+        }
+    }
+
+    // Toggle handler (must be user gesture)
+    if (fullscreenBtn) {
+        fullscreenBtn.addEventListener('click', async () => {
+            if (document.fullscreenElement === chatContainer || chatContainer.classList.contains('fullscreen')) {
+                await exitFullscreen();
+            } else {
+                await enterFullscreen();
+            }
+        });
+    }
+
+    // Keep button state in sync with actual fullscreen changes
+    document.addEventListener('fullscreenchange', () => {
+        const isFs = !!document.fullscreenElement;
+        if (!isFs) {
+            // fallback: ensure CSS class removed
+            if (chatContainer) chatContainer.classList.remove('fullscreen');
+            fullscreenBtn && fullscreenBtn.classList.remove('fs-active');
+        } else {
+            // When entering native fullscreen, ensure button shows active
+            fullscreenBtn && fullscreenBtn.classList.add('fs-active');
+        }
+    });
+
 });
