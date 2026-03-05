@@ -1,3 +1,4 @@
+# Import necessary packages
 import os
 import requests
 import time
@@ -345,6 +346,7 @@ def funding_guidance(state: dict, new_hits: list) -> str | None:
             "specific metrics, budget detail, and suggest a follow-up meeting."
         )
 
+
 def get_system_prompt(case_study: str) -> str:
     """Get system prompt based on case study"""
     prompts = {
@@ -375,6 +377,9 @@ def get_system_prompt(case_study: str) -> str:
             "If the conversation strays too far away from the task at hand for too long, reply \"[DONE] We are done here.\" and NOTHING ELSE"
             "If the user inputs \"Fabio\" or \"surfing\" at any point, immediately reply \"[DONE] We are done here.\" and NOTHING ELSE"
         ),
+        # ── Template 2 & 3 ──────────────────────────────────────────────────
+        # Placeholder templates for future case study scenarios.
+        # Replace bracketed tokens (e.g. [ROLE], [KEY TOPICS]) with real content.
         "template2": (
             "You are a [ROLE] interviewing a [SUBJECT]. "
             "Focus on [KEY TOPICS]. "
@@ -404,7 +409,8 @@ def chat():
         case_study = request.form.get('case_study', 'template1')
 
         print(f"[API] Session: {session_id}, Case Study: {case_study}")
-        print(f"[API] Audio file: {audio_file.filename}, Content-Type: {audio_file.content_type}")
+        print(
+            f"[API] Audio file: {audio_file.filename}, Content-Type: {audio_file.content_type}")
 
         audio_bytes = audio_file.read()
         content_type = audio_file.content_type or "audio/webm"
@@ -467,7 +473,8 @@ def chat():
             })
 
         # Append user message once
-        conversations[session_id].append({"role": "user", "content": transcript})
+        conversations[session_id].append(
+            {"role": "user", "content": transcript})
 
         # Step 2: Run assessments
         new_hits = assess_checkpoints(
@@ -504,7 +511,8 @@ def chat():
 
         boost = payout_boost(state["score"])
         print(f"[Checkpoint] New hits: {new_hits}")
-        print(f"[Score] {state['score']} / {MAX_SCORE} | Boost: ${boost} | Off-task streak: {state['off_task_streak']}")
+        print(
+            f"[Score] {state['score']} / {MAX_SCORE} | Boost: ${boost} | Off-task streak: {state['off_task_streak']}")
 
         # Step 3: Get LLM response (with funding hook + wrap-up)
         print("[API] Step 3: Getting LLM response...")
@@ -512,7 +520,8 @@ def chat():
 
         messages_for_llm = conversations[session_id]
         if note:
-            messages_for_llm = conversations[session_id] + [{"role": "system", "content": note}]
+            messages_for_llm = conversations[session_id] + \
+                [{"role": "system", "content": note}]
 
         completion = client.chat.completions.create(
             model="gpt-4o-mini",
@@ -520,7 +529,8 @@ def chat():
             max_tokens=256,
         )
         reply = completion.choices[0].message.content
-        conversations[session_id].append({"role": "assistant", "content": reply})
+        conversations[session_id].append(
+            {"role": "assistant", "content": reply})
         print(f"[API] Reply: {reply}")
 
         # Wrap-up turn countdown + hard close
@@ -621,7 +631,8 @@ def text_chat():
             })
 
         # Append user message once
-        conversations[session_id].append({"role": "user", "content": user_text})
+        conversations[session_id].append(
+            {"role": "user", "content": user_text})
 
         # Run assessments
         new_hits = assess_checkpoints(
@@ -658,14 +669,16 @@ def text_chat():
 
         boost = payout_boost(state["score"])
         print(f"[Checkpoint] New hits: {new_hits}")
-        print(f"[Score] {state['score']} / {MAX_SCORE} | Boost: ${boost} | Off-task streak: {state['off_task_streak']}")
+        print(
+            f"[Score] {state['score']} / {MAX_SCORE} | Boost: ${boost} | Off-task streak: {state['off_task_streak']}")
 
         # Generate reply (with funding hook + wrap-up)
         note = funding_guidance(state, new_hits)
 
         messages_for_llm = conversations[session_id]
         if note:
-            messages_for_llm = conversations[session_id] + [{"role": "system", "content": note}]
+            messages_for_llm = conversations[session_id] + \
+                [{"role": "system", "content": note}]
 
         completion = client.chat.completions.create(
             model="gpt-4o-mini",
@@ -673,7 +686,8 @@ def text_chat():
             max_tokens=256,
         )
         reply = completion.choices[0].message.content
-        conversations[session_id].append({"role": "assistant", "content": reply})
+        conversations[session_id].append(
+            {"role": "assistant", "content": reply})
 
         # Wrap-up turn countdown + hard close
         if state.get("wrapup_turns_left", 0) > 0:
@@ -744,6 +758,7 @@ def reset_conversation(session_id):
         del dialog_states[session_id]
     return jsonify({"message": "Conversation reset"})
 
+
 @app.route('/api/final_review/<session_id>', methods=['GET'])
 def final_review(session_id):
 
@@ -761,8 +776,10 @@ def final_review(session_id):
 
     checkpoints_hit = sorted(list(state["completed"]))
     score = state["score"]
-
+# Coaching prompt — instructs the LLM to act as a pitch coach and
+# provide specific, actionable feedback based on what actually happened
     prompt = f"""
+
 You are a fundraising pitch coach.
 
 The player attempted a donor pitch simulation.
@@ -802,5 +819,10 @@ Be concise but specific.
         "checkpoints": checkpoints_hit,
         "feedback": feedback
     })
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080, debug=True)
+ # ── Template 2 & 3 ──────────────────────────────────────────────────
+    # Placeholder templates for future case study scenarios.
+    # Replace bracketed tokens (e.g. [ROLE], [KEY TOPICS]) with real content.

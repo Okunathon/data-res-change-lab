@@ -1,8 +1,20 @@
+/* =============================================================
+   GLOBAL RESET
+   Removes default browser margin/padding and sets box-sizing
+   to border-box so padding/border are included in element width.
+   ============================================================= */
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
+
+/* =============================================================
+   CSS CUSTOM PROPERTIES (Design Tokens)
+   Centralized variables for colors, shadows, and transitions.
+   Edit here to update the theme site-wide.
+============================================================= */
 
 :root {
     --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -22,6 +34,11 @@
     --transition-base: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* =============================================================
+   BASE BODY STYLES
+   Sets global font stack, line height, and a fixed diagonal
+   gradient background that persists while scrolling.
+============================================================= */
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     line-height: 1.7;
@@ -113,7 +130,11 @@ body {
     background: var(--primary-gradient);
 }
 
-/* Landing Page Styles */
+/* =============================================================
+   LANDING PAGE — HERO SECTION
+   Full-width gradient banner with animated radial overlay
+   for a subtle light shimmer effect.
+============================================================= */
 .hero {
     background: var(--primary-gradient);
     color: white;
@@ -138,8 +159,15 @@ body {
 }
 
 @keyframes float {
-    0%, 100% { transform: translate(0, 0) rotate(0deg); }
-    50% { transform: translate(-20px, 20px) rotate(5deg); }
+
+    0%,
+    100% {
+        transform: translate(0, 0) rotate(0deg);
+    }
+
+    50% {
+        transform: translate(-20px, 20px) rotate(5deg);
+    }
 }
 
 .hero h1 {
@@ -318,6 +346,10 @@ body {
     transform: translateX(-3px);
 }
 
+/* =============================================================
+   SIMULATION PAGE — PLACEHOLDER CONTENT
+   Shown when simulation is in an idle or loading state.
+============================================================= */
 .simulation-main {
     min-height: 70vh;
 }
@@ -451,7 +483,10 @@ footer {
     box-shadow: 0 6px 20px rgba(79, 172, 254, 0.4);
 }
 
-/* Preview Page */
+/* =============================================================
+   PREVIEW PAGE
+   Detail view for an individual case study before starting sim.
+============================================================= */
 .preview-content {
     background: var(--card-bg);
     border-radius: 24px;
@@ -581,27 +616,32 @@ footer {
 
 /* Optional semi-transparent overlay to improve text contrast */
 .chatbot-container::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(rgba(255,255,255,0.08), rgba(255,255,255,0.08)); /* tweak for light/dark */
-  pointer-events: none;
-  border-radius: inherit; /* match container radius */
-  z-index: 0;
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.08));
+    /* tweak for light/dark */
+    pointer-events: none;
+    border-radius: inherit;
+    /* match container radius */
+    z-index: 0;
 }
 
 /* Ensure messages render above the overlay */
 .chatbot-container .chat-messages,
 .chatbot-container .chat-header,
 .chatbot-container .chat-input-container {
-  position: relative;
-  z-index: 1;
-  background: transparent; /* let background show through */
+    position: relative;
+    z-index: 1;
+    background: transparent;
+    /* let background show through */
 }
+
 /* Chatbot background image (added) */
 
 .chatbot-container {
-    background-image: url("/neutral.png");    background-size: cover;
+    background-image: url("/neutral.png");
+    background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
     position: relative;
@@ -629,6 +669,7 @@ footer {
     font-size: 1.5rem;
     font-weight: 700;
 }
+
 /* Mood Image in Chat Header */
 .character-mood {
     display: flex;
@@ -667,11 +708,14 @@ footer {
 }
 
 @keyframes pulse-status {
-    0%, 100% { 
-        opacity: 1; 
+
+    0%,
+    100% {
+        opacity: 1;
         transform: scale(1);
     }
-    50% { 
+
+    50% {
         opacity: 0.6;
         transform: scale(0.9);
     }
@@ -716,6 +760,7 @@ footer {
         opacity: 0;
         transform: translateY(10px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -876,7 +921,7 @@ footer {
 }
 
 .btn-fullscreen:hover {
-    background: rgba(248,250,252,0.6);
+    background: rgba(248, 250, 252, 0.6);
     color: var(--text-primary);
 }
 
@@ -916,8 +961,8 @@ footer {
     transition: opacity 0.25s ease;
 }
 
-.chatbot-container.fullscreen ~ .sidebar-info,
-.chatbot-container:fullscreen ~ .sidebar-info {
+.chatbot-container.fullscreen~.sidebar-info,
+.chatbot-container:fullscreen~.sidebar-info {
     opacity: 0;
     pointer-events: none;
     visibility: hidden;
@@ -934,9 +979,12 @@ footer {
 }
 
 @keyframes pulse-record {
-    0%, 100% {
+
+    0%,
+    100% {
         box-shadow: 0 0 0 0 rgba(245, 87, 108, 0.7);
     }
+
     50% {
         box-shadow: 0 0 0 24px rgba(245, 87, 108, 0);
     }
@@ -975,12 +1023,17 @@ footer {
 }
 
 @keyframes shimmer {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
 }
 
 .chat-input {
-    
+
     flex: 1;
     padding: 1.25rem;
     border: 2px solid var(--border-color);
@@ -1247,8 +1300,13 @@ footer {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 @keyframes slideUp {
@@ -1256,6 +1314,7 @@ footer {
         opacity: 0;
         transform: translateY(50px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -1267,17 +1326,17 @@ footer {
     .simulation-main {
         grid-template-columns: 1fr;
     }
-    
+
     .sidebar-info {
         order: -1;
         grid-template-columns: repeat(2, 1fr);
         display: grid;
     }
-    
+
     .hero h1 {
         font-size: 2.5rem;
     }
-    
+
     .tagline {
         font-size: 1.25rem;
     }
@@ -1288,63 +1347,63 @@ footer {
         flex-direction: column;
         padding: 1rem;
     }
-    
+
     .nav-menu {
         flex-direction: row;
         width: 100%;
         justify-content: center;
     }
-    
+
     .nav-link {
         padding: 1rem;
     }
-    
+
     .case-studies-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .feature-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .hero {
         padding: 3rem 2rem;
     }
-    
+
     .hero h1 {
         font-size: 2rem;
     }
-    
+
     .tagline {
         font-size: 1.1rem;
     }
-    
+
     .page-header h1 {
         font-size: 2rem;
     }
-    
+
     .sidebar-info {
         grid-template-columns: 1fr;
     }
-    
+
     .chatbot-container {
         height: calc(100vh - 350px);
     }
-    
+
     .message {
         max-width: 95%;
     }
-    
+
     .sim-header {
         flex-direction: column;
         gap: 1rem;
         text-align: center;
     }
-    
+
     .preview-content {
         padding: 2rem;
     }
-    
+
     .preview-header h1 {
         font-size: 2rem;
     }
@@ -1368,9 +1427,12 @@ footer {
 html {
     scroll-behavior: smooth;
 }
-/* ================================
-   REVIEW PAGE STYLES
-================================ */
+
+/* =============================================================
+   REVIEW PAGE
+   Displays session review results including score and
+   AI-generated feedback after a simulation ends.
+============================================================= */
 
 .review-container {
     max-width: 1000px;

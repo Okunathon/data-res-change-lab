@@ -1,43 +1,58 @@
 <!DOCTYPE html>
 <html>
-<head>
-<title>Game Review</title>
 
-<link rel="stylesheet" href="/css/style.css">
+<head>
+    <title>Game Review</title>
+    <!-- Shared stylesheet — includes .review-container, #score, and #feedback styles -->
+
+    <link rel="stylesheet" href="/css/style.css">
 
 </head>
 
 <body>
+    <!--
+        Review Page
+        Displays the AI-generated coaching feedback after a simulation ends.
+        Reads the session ID from the URL query string (?session=...)
+        and fetches the final score + feedback from the backend API.
+    -->
+    <div class="review-container">
+        <!-- Score display — populated by JS once the API responds -->
 
-<div class="review-container">
+        <h1>Game Review</h1>
 
-<h1>Game Review</h1>
+        <h2 id="score">Loading score...</h2>
 
-<h2 id="score">Loading score...</h2>
+        <pre id="feedback">Generating review...</pre>
 
-<pre id="feedback">Generating review...</pre>
+    </div>
 
-</div>
+    <script>
+        // Extract the session ID from the URL query string.
+        // The simulation page appends ?session=<id> when redirecting here
+        const params = new URLSearchParams(window.location.search);
+        const sessionId = params.get("session");
 
-<script>
-const params = new URLSearchParams(window.location.search);
-const sessionId = params.get("session");
+        // Fetch the final review from the backend using the session ID.
+        // Returns: { score, checkpoints, feedback }
+        fetch(`http://localhost:8080/api/final_review/${sessionId}`)
+            .then(res => res.json())
+            .then(data => {
+                console.log("REVIEW DATA:", data);
 
-fetch(`http://localhost:8080/api/final_review/${sessionId}`)
-  .then(res => res.json())
-  .then(data => {
-      console.log("REVIEW DATA:", data);
+                document.getElementById("score").textContent =
+                    `Score: ${data.score}`;
 
-      document.getElementById("score").textContent =
-          `Score: ${data.score}`;
-
-      document.getElementById("feedback").textContent =
-          data.feedback;
-  })
-  .catch(err => {
-      console.error(err);
-  });
-</script>
+                document.getElementById("feedback").textContent =
+                    data.feedback;
+            })
+            .catch(err => {
+                // Log fetch/parse errors — consider adding a user-facing
+                // error message here so the page doesn't silently stay on "Loading..."
+                console.error(err);
+            });
+    </script>
 
 </body>
+
 </html>
