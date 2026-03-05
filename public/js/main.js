@@ -179,18 +179,23 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Function to show loading indicator
     function showLoading() {
+        const container = document.querySelector('.chatbot-container');
+        if (container) {
+            container.style.backgroundImage = 'url("/e.png")';
+        }
+
         const loadingDiv = document.createElement('div');
         loadingDiv.className = 'message ai-message loading-message';
         loadingDiv.id = 'loadingMessage';
-        
+
         const avatar = document.createElement('div');
         avatar.className = 'message-avatar';
         avatar.textContent = '👩🏾‍🔬';
-        
+
         const messageContent = document.createElement('div');
         messageContent.className = 'message-content';
         messageContent.innerHTML = '<p>Thinking...</p>';
-        
+
         loadingDiv.appendChild(avatar);
         loadingDiv.appendChild(messageContent);
         chatMessages.appendChild(loadingDiv);
