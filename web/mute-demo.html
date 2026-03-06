@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Text Mute Demo</title>
+  <style>
+    :root { --accent: #0b84ff; }
+    body { font-family: system-ui, -apple-system, sans-serif; padding: 24px; }
+    .mute-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 8px 12px; border-radius: 8px; border: 1px solid #ddd;
+      background: white; cursor: pointer; user-select: none;
+    }
+    .mute-btn[aria-pressed="true"] { background: var(--accent); color: white; }
+    .speaker { width: 18px; height: 18px; display:inline-block; }
+    .output {
+      margin-top: 16px; padding: 12px; border: 1px solid #eee; border-radius: 8px;
+      min-height: 80px; white-space: pre-wrap; background: #fafafa;
+    }
+  </style>
+</head>
+<body>
+  <button id="muteBtn" class="mute-btn" aria-pressed="false" aria-label="Mute text output">
+    <span class="speaker" id="speakerIcon">🔊</span>
+    <span id="muteLabel">Unmuted</span>
+  </button>
+
+  <div class="output" id="outputArea" aria-live="polite"></div>
+
+  <script>
+    const muteBtn = document.getElementById('muteBtn');
+    const speakerIcon = document.getElementById('speakerIcon');
+    const muteLabel = document.getElementById('muteLabel');
+    const outputArea = document.getElementById('outputArea');
+
+    let muted = false;
+
+    function setMuted(value) {
+      muted = !!value;
+      muteBtn.setAttribute('aria-pressed', String(muted));
+      muteLabel.textContent = muted ? 'Muted' : 'Unmuted';
+      speakerIcon.textContent = muted ? '🔇' : '🔊';
+      if (muted) {
+        outputArea.dataset.muted = 'true';
+      } else {
+        delete outputArea.dataset.muted;
+      }
+    }
+
+    function toggleMute() { setMuted(!muted); }
+
+    function appendText(text) {
+      if (muted) return;
+      const time = new Date().toLocaleTimeString();
+      const node = document.createElement('div');
+      node.textContent = `[${time}] ${text}`;
+      outputArea.appendChild(node);
+      outputArea.scrollTop = outputArea.scrollHeight;
+    }
+
+    muteBtn.addEventListener('click', toggleMute);
+
+    // Demo producer
+    let counter = 1;
+    setInterval(() => {
+      appendText('Generated message #' + counter++);
+    }, 2000);
+
+    // Expose API for testing
+    window.textMute = { setMuted, toggleMute, isMuted: () => muted, appendText };
+  </script>
+</body>
+</html>

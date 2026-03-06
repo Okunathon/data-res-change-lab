@@ -1,5 +1,8 @@
 import os
-import requests
+try:
+    import requests
+except ModuleNotFoundError:
+    raise SystemExit("Missing dependency: run 'python -m pip install requests' in your project's virtualenv")
 import time
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
@@ -274,6 +277,63 @@ def chat():
             "reply": reply,
             "audio_url": f"/api/audio/{audio_id}"
         })
+    
+    except Exception as e:
+        print(f"[API] EXCEPTION: {type(e).__name__}: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/chat-text', methods=['POST'])
+def chat_text():
+    """Handle text input, LLM response, and optional TTS"""
+    try:
+        print("\n[API] Received text chat request")
+        
+        data = request.get_json()
+        if not data or 'message' not in data:
+            print("[API] Error: No message in request")
+            return jsonify({"error": "No message provided"}), 400
+        
+        user_message = data['message'].strip()
+        session_id = data.get('session_id', 'default')
+        case_study = data.get('case_study', 'template1')
+        with_audio = data.get('with_audio', True)  # Generate audio by default for text-to-text
+        
+        print(f"[API] Session: {session_id}, Case Study: {case_study}")
+        print(f"[API] User message: {user_message[:100]}...")
+        
+        # Initialize conversation if new session
+        if session_id not in conversations:
+            print(f"[API] Creating new conversation for session {session_id}")
+            conversations[session_id] = [
+                {"role": "system", "content": get_system_prompt(case_study)}
+            ]
+        
+        # Get LLM response
+        print("[API] Getting LLM response...")
+        reply = get_chatbot_reply(conversations[session_id], user_message, case_study)
+        print(f"[API] Reply: {reply}")
+        
+        response_data = {
+            "message": user_message,
+            "reply": reply
+        }
+        
+        # Generate audio if requested
+        if with_audio:
+            print("[API] Converting to speech...")
+            audio_id = f"{session_id}_{int(time.time() * 1000)}"
+            audio_path = synthesize_with_elevenlabs(reply, audio_id)
+            if audio_path:
+                response_data["audio_url"] = f"/api/audio/{audio_id}"
+                print(f"[API] Audio generated: {audio_path}")
+            else:
+                print("[API] Warning: TTS failed, continuing without audio")
+        
+        print("[API] Text chat success!")
+        return jsonify(response_data)
     
     except Exception as e:
         print(f"[API] EXCEPTION: {type(e).__name__}: {e}")

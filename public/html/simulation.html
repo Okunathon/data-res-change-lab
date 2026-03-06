@@ -29,6 +29,10 @@
         <main class="simulation-main">
             <div class="chatbot-container">
                 <div class="chat-header">
+                    <div class="jennifer-container">
+                        <div class="jennifer-avatar" id="jenniferAvatar">👩🏾‍🔬</div>
+                        <div class="jennifer-status" id="jenniferStatus">Listening...</div>
+                    </div>
                     <h2>💬 Pitch Session</h2>
                 </div>
                 
@@ -54,7 +58,10 @@
                             placeholder="Type your response here..."
                             rows="3"
                         ></textarea>
-                        <button id="sendButton" class="btn-send">Send</button>
+                        <div class="text-input-controls">
+                            <button id="muteToggle" class="btn-mute" title="Toggle audio">🔊</button>
+                            <button id="sendButton" class="btn-send">Send</button>
+                        </div>
                     </div>
                     
                     <div id="voiceInputSection" style="display: none; justify-content: center;">
@@ -87,10 +94,15 @@
     <div id="feedbackModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>🎯 Session Feedback</h2>
+                <h2>🎉 Session Complete</h2>
                 <button class="modal-close" id="closeFeedback">&times;</button>
             </div>
             <div class="modal-body">
+                <div class="feedback-section celebration-section">
+                    <h3>Congratulations on receiving such a great gift!</h3>
+                    <p class="celebration-message">Jennifer was impressed with your conversation today.</p>
+                </div>
+                
                 <div class="feedback-section">
                     <h3>Overall Performance</h3>
                     <div class="performance-score" id="performanceScore"></div>
@@ -109,6 +121,38 @@
                 <div class="feedback-section">
                     <h3>📊 Conversation Insights</h3>
                     <div id="insightsList" class="insights-grid"></div>
+                </div>
+                
+                <div class="feedback-section assessment-section">
+                    <h3>📋 Assessment Score</h3>
+                    <p class="assessment-label">Rate Jennifer's investment potential:</p>
+                    <div class="assessment-scale" id="assessmentScale">
+                        <div class="scale-item">
+                            <input type="radio" name="assessment" value="0" id="assess0">
+                            <label for="assess0">0%</label>
+                        </div>
+                        <div class="scale-item">
+                            <input type="radio" name="assessment" value="25" id="assess25">
+                            <label for="assess25">25%</label>
+                        </div>
+                        <div class="scale-item">
+                            <input type="radio" name="assessment" value="50" id="assess50">
+                            <label for="assess50">50%</label>
+                        </div>
+                        <div class="scale-item">
+                            <input type="radio" name="assessment" value="75" id="assess75">
+                            <label for="assess75">75%</label>
+                        </div>
+                        <div class="scale-item">
+                            <input type="radio" name="assessment" value="100" id="assess100">
+                            <label for="assess100">100%</label>
+                        </div>
+                    </div>
+                    <p class="assessment-note" id="assessmentNote"></p>
+                </div>
+                
+                <div class="feedback-section review-section">
+                    <p>Did you find this simulation helpful? <a href="#" class="review-link">Click here for a review</a></p>
                 </div>
             </div>
             <div class="modal-footer">

@@ -51,6 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     let messageCount = 0;
     let currentMode = 'text';
+    let isMuted = false;  // Track mute state
     const studyKey = getCaseStudyFromURL();
     
     // Update case study name
@@ -80,6 +81,43 @@ document.addEventListener('DOMContentLoaded', () => {
         textInputSection.style.display = 'none';
         voiceInputSection.style.display = 'block';
     });
+    
+    // Mute button handler
+    const muteToggle = document.getElementById('muteToggle');
+    if (muteToggle) {
+        muteToggle.addEventListener('click', () => {
+            isMuted = !isMuted;
+            muteToggle.textContent = isMuted ? '🔇' : '🔊';
+            muteToggle.classList.toggle('muted', isMuted);
+        });
+    }
+    
+    // Jennifer avatar state manager
+    function updateJenniferState(state) {
+        const avatar = document.getElementById('jenniferAvatar');
+        const status = document.getElementById('jenniferStatus');
+        
+        if (!avatar || !status) return;
+        
+        const states = {
+            listening: { emoji: '👂', text: 'Listening...' },
+            thinking: { emoji: '🤔', text: 'Thinking...' },
+            happy: { emoji: '😊', text: 'Impressed!' },
+            talking: { emoji: '👩🏾‍🔬', text: 'Speaking...' },
+            interested: { emoji: '👀', text: 'Interested...' },
+            skeptical: { emoji: '🤨', text: 'Skeptical...' }
+        };
+        
+        const stateData = states[state] || states.listening;
+        avatar.textContent = stateData.emoji;
+        status.textContent = stateData.text;
+        
+        // Add animation pulse
+        avatar.style.animation = 'none';
+        setTimeout(() => {
+            avatar.style.animation = 'pulse-avatar 1s ease-in-out';
+        }, 10);
+    }
     
     // Function to add a message to the chat
     function addMessage(content, isUser = false) {
@@ -192,15 +230,96 @@ document.addEventListener('DOMContentLoaded', () => {
         
         addMessage(message, true);
         userInput.value = '';
+        userMessages.push(message);
+        
+        updateJenniferState('thinking');
         
         // Show loading
         showLoading();
         
-        // Simulate AI response for now (replace with actual API call later)
-        setTimeout(() => {
+        // Send to API
+        sendTextMessage(message);
+    }
+    
+    // Function to send text message to API
+    async function sendTextMessage(userMessage) {
+        try {
+            console.log('[Text] Sending message to API...');
+            console.log('[Text] Message:', userMessage);
+            
+            const response = await fetch(`${API_URL}/api/chat-text`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: userMessage,
+                    session_id: SESSION_ID,
+                    case_study: studyKey,
+                    with_audio: !isMuted  // Only generate audio if not muted
+                })
+            });
+            
+            console.log('[Text] Response status:', response.status);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('[Text] API error response:', errorText);
+                let errorData;
+                try {
+                    errorData = JSON.parse(errorText);
+                } catch {
+                    errorData = { error: errorText };
+                }
+                throw new Error(errorData.error || 'API request failed');
+            }
+            
+            const data = await response.json();
+            console.log('[Text] API response:', data);
+            
             removeLoading();
-            addMessage("cool!", false);
-        }, 1000);
+            
+            // Update Jennifer's state based on response sentiment
+            const replyLower = data.reply.toLowerCase();
+            if (replyLower.includes('great') || replyLower.includes('excellent') || replyLower.includes('impressive')) {
+                updateJenniferState('happy');
+            } else if (replyLower.includes('question') || replyLower.includes('tell me') || replyLower.includes('interesting')) {
+                updateJenniferState('interested');
+            } else if (replyLower.includes('concern') || replyLower.includes('unclear') || replyLower.includes('not sure')) {
+                updateJenniferState('skeptical');
+            } else {
+                updateJenniferState('listening');
+            }
+            
+            // Add AI's text response
+            addMessage(data.reply, false);
+            aiResponses.push(data.reply);
+            
+            // Update Jennifer to talking state
+            updateJenniferState('talking');
+            
+            // Add and play audio response if available and not muted
+            if (data.audio_url && !isMuted) {
+                const audioUrl = `${API_URL}${data.audio_url}`;
+                console.log('[Text] Audio URL:', audioUrl);
+                addAudioMessage(audioUrl);
+            }
+            
+            // Increment exchange count and check if feedback should be shown
+            voiceExchangeCount++;
+            console.log('[Feedback] Text exchanges:', voiceExchangeCount);
+            if (voiceExchangeCount >= FEEDBACK_THRESHOLD && !feedbackShown) {
+                console.log('[Feedback] Threshold reached! Showing feedback modal...');
+                feedbackShown = true;
+                setTimeout(() => showFeedbackModal(), 2000);
+            }
+            
+        } catch (error) {
+            removeLoading();
+            console.error('[Text] Error:', error);
+            console.error('[Text] Error stack:', error.stack);
+            addMessage(`Error: ${error.message}. Check console for details.`, false);
+        }
     }
     
     // Function to send voice message to API
@@ -209,6 +328,8 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('[Voice] Sending audio to API...');
             console.log('[Voice] Audio blob size:', audioBlob.size, 'bytes');
             console.log('[Voice] Audio blob type:', audioBlob.type);
+            
+            updateJenniferState('thinking');
             
             showLoading();
             
@@ -249,9 +370,24 @@ document.addEventListener('DOMContentLoaded', () => {
             
             removeLoading();
             
+            // Update Jennifer's state based on response sentiment
+            const replyLower = data.reply.toLowerCase();
+            if (replyLower.includes('great') || replyLower.includes('excellent') || replyLower.includes('impressive')) {
+                updateJenniferState('happy');
+            } else if (replyLower.includes('question') || replyLower.includes('tell me') || replyLower.includes('interesting')) {
+                updateJenniferState('interested');
+            } else if (replyLower.includes('concern') || replyLower.includes('unclear') || replyLower.includes('not sure')) {
+                updateJenniferState('skeptical');
+            } else {
+                updateJenniferState('listening');
+            }
+            
             // Add user's transcribed message
             addMessage(data.transcript, true);
             userMessages.push(data.transcript);
+            
+            // Update Jennifer to talking state
+            updateJenniferState('talking');
             
             // Add AI's text response
             addMessage(data.reply, false);
@@ -512,6 +648,34 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="insight-label">Professional Terms</div>
             </div>
         `;
+        
+        // Set up assessment scale handlers
+        const assessmentRadios = document.querySelectorAll('input[name="assessment"]');
+        const assessmentNote = document.getElementById('assessmentNote');
+        const assessmentNotes = {
+            '0': "You may want to practice more before pitching to investors.",
+            '25': "Good start! Keep refining your pitch.",
+            '50': "You're on the right track. Work on the details.",
+            '75': "Excellent! Very close to investment-ready.",
+            '100': "Outstanding! Ready for real investor pitches."
+        };
+        
+        assessmentRadios.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                const value = e.target.value;
+                assessmentNote.textContent = assessmentNotes[value];
+                assessmentNote.style.display = 'block';
+            });
+        });
+        
+        // Set up review link
+        const reviewLink = document.querySelector('.review-link');
+        if (reviewLink) {
+            reviewLink.onclick = (e) => {
+                e.preventDefault();
+                alert('Thank you for your feedback! This would normally open a review form.');
+            };
+        }
         
         modal.classList.add('show');
         

@@ -1,0 +1,74 @@
+/* Anchored text bubble styles (left-anchored with a line + triangle pointer)
+   Usage: add the class `bubble-anchored` to an element. */
+.bubble-anchored {
+  position: relative;
+  display: inline-block;
+  background: #f5f7fa;
+  color: #111827;
+  padding: 10px 14px;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(16,24,40,0.06);
+  max-width: 70%;
+  line-height: 1.35;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+}
+
+/* thin connecting line to the left (the "anchored" line) */
+.bubble-anchored::before {
+  content: "";
+  position: absolute;
+  left: -48px; /* length of the connector */
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 2px;
+  background: #c5c7cc;
+  border-radius: 2px;
+}
+
+/* small triangle / arrow at the end of the connector */
+.bubble-anchored::after {
+  content: "";
+  position: absolute;
+  left: -16px; /* position the triangle close to the bubble */
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-right: 10px solid #f5f7fa; /* same color as bubble */
+}
+
+/* optional modifier for a darker theme or primary bubble */
+.bubble-anchored.primary {
+  background: #0ea5a3;
+  color: white;
+}
+.bubble-anchored.primary::before { background: rgba(255,255,255,0.45); }
+.bubble-anchored.primary::after { border-right-color: #0ea5a3; }
+
+/* utility: anchor the bubble further from left */
+.bubble-anchored.offset-left {
+  margin-left: 36px;
+}
+
+/* small helper for wrapping container */
+.bubble-demo-wrap {
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.anchor-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #e6e9ef;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: #374151;
+}
