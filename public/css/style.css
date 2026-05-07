@@ -4,7 +4,7 @@
    to border-box so padding/border are included in element width.
    ============================================================= */
 
-* {
+   * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -864,25 +864,26 @@ footer {
 }
 
 .btn-record {
-    background: var(--accent-gradient);
+    background: var(--primary-gradient);
     color: white;
     border: none;
-    padding: 1.25rem 3.5rem;
-    border-radius: 16px;
-    font-size: 1.1rem;
+    padding: 1.25rem 2.5rem;
+    border-radius: 12px;
+    font-size: 1.05rem;
     font-weight: 700;
     cursor: pointer;
     transition: var(--transition-base);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 220px;
-    min-height: 70px;
-    box-shadow: 0 8px 24px rgba(79, 172, 254, 0.35);
-    position: relative;
-    overflow: hidden;
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
 }
 
+.btn-record:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(102, 126, 234, 0.4);
+}
+
+.btn-record:active {
+    transform: translateY(0);
+}
 .btn-record::before {
     content: '';
     position: absolute;
@@ -1051,6 +1052,37 @@ footer {
     box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
 }
 
+.retry-btn {
+    background: var(--primary-gradient);
+    color: white;
+    border: none;
+    padding: 1.25rem 2.5rem;
+    border-radius: 12px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition-base);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+}
+
+.progression-btn {
+    background: var(--accent-gradient);
+    color: white;
+    border: none;
+    padding: 1.25rem 2.5rem;
+    border-radius: 12px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition-base);
+    box-shadow: 0 6px 20px rgba(79, 172, 254, 0.3);
+    margin-top: 0.75rem;
+}
+
+.progression-btn:hover,
+.retry-btn:hover {
+    transform: translateY(-2px);
+}
 .btn-send {
     background: var(--primary-gradient);
     color: white;
@@ -1480,4 +1512,71 @@ html {
     font-family: inherit;
     margin: 0;
     overflow-x: auto;
+}
+
+.review-actions {
+    display: flex;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+.progression-container {
+    max-width: 1200px;
+}
+
+.progression-intro {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 1.05rem;
+    margin-bottom: 2rem;
+}
+
+.progression-table-wrap {
+    overflow-x: auto;
+    border-radius: 18px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+}
+
+.progression-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card-bg);
+}
+
+.progression-table thead {
+    background: var(--dark-bg);
+    color: white;
+}
+
+.progression-table th,
+.progression-table td {
+    padding: 1rem 1.25rem;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.progression-table td:nth-child(4) {
+    min-width: 320px;
+}
+
+.progression-table tbody tr:hover {
+    background: rgba(102, 126, 234, 0.05);
+}
+
+.progression-link {
+    color: #2563eb;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.progression-link:hover {
+    text-decoration: underline;
+}
+
+.progression-empty {
+    text-align: center;
+    color: var(--text-secondary);
+    padding: 2rem;
 }

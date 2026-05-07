@@ -24,6 +24,7 @@ let mediaRecorder;
 let audioChunks = [];
 let isRecording = false;
 let recordingStartTime = 0;
+let isMuted = false;
 
 // Feedback tracking
 let voiceExchangeCount = 0;
@@ -33,16 +34,50 @@ let feedbackShown = false;
 const FEEDBACK_THRESHOLD = 8;
 
 // Initialize chatbot
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+
+    function getProgressionUrl() {
+        return `/progression.html?study=${studyKey}`;
+    }
+
+    async function resetSession() {
+        try {
+            const resetResponse = await fetch(`${API_URL}/api/reset/${SESSION_ID}`, {
+                method: 'POST'
+            });
+
+            if (!resetResponse.ok) {
+                console.warn('[Init] Session reset failed with status:', resetResponse.status);
+            }
+        } catch (error) {
+            console.warn('[Init] Session reset unavailable:', error);
+        }
+    }
+
+    async function resetSessionAndReload() {
+        await resetSession();
+        window.location.reload();
+    }
+
+    await resetSession();
+
     // Only run on simulation page
     if (!document.getElementById('chatMessages')) return;
 
     const chatMessages = document.getElementById('chatMessages');
     const userInput = document.getElementById('userInput');
+    const retryButton = document.getElementById('retryButton');
     const sendButton = document.getElementById('sendButton');
     const messageCountEl = document.getElementById('messageCount');
     const caseStudyNameEl = document.getElementById('caseStudyName');
+    const muteBtn = document.getElementById("muteBtn");
 
+    if (muteBtn) {
+        muteBtn.addEventListener("click", () => {
+            isMuted = !isMuted;
+            muteBtn.textContent = isMuted ? "🔇" : "🔊";
+        });
+    }
     // Voice mode elements
     const textModeBtn = document.getElementById('textModeBtn');
     const voiceModeBtn = document.getElementById('voiceModeBtn');
@@ -102,11 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function addMessage(content, isUser = false) {
         const messageDiv = document.createElement('div');
         messageDiv.className = `message ${isUser ? 'user-message' : 'ai-message'}`;
-
-        const avatar = document.createElement('div');
-        avatar.className = 'message-avatar';
-        avatar.textContent = isUser ? '👤' : '👩🏾‍🔬';
-
+    
         const messageContent = document.createElement('div');
         messageContent.className = 'message-content';
 
@@ -114,7 +145,6 @@ document.addEventListener('DOMContentLoaded', () => {
         messagePara.textContent = content;
         messageContent.appendChild(messagePara);
 
-        messageDiv.appendChild(avatar);
         messageDiv.appendChild(messageContent);
 
         chatMessages.appendChild(messageDiv);
@@ -129,13 +159,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Function to add audio message with player
     function addAudioMessage(audioUrl) {
         console.log('[Audio] Adding audio player with URL:', audioUrl);
-
-        const messageDiv = document.createElement('div');
-        messageDiv.className = 'message ai-message';
-
-        const avatar = document.createElement('div');
-        avatar.className = 'message-avatar';
-        avatar.textContent = '👩🏾‍🔬';
 
         const messageContent = document.createElement('div');
         messageContent.className = 'message-content';
@@ -165,16 +188,15 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         messageContent.appendChild(audioPlayer);
-        messageDiv.appendChild(avatar);
-        messageDiv.appendChild(messageContent);
+        
 
-        chatMessages.appendChild(messageDiv);
         chatMessages.scrollTop = chatMessages.scrollHeight;
 
         messageCount++;
         if (messageCountEl) {
             messageCountEl.textContent = messageCount;
         }
+        return;
     }
 
     // Function to show loading indicator
@@ -188,67 +210,113 @@ document.addEventListener('DOMContentLoaded', () => {
         loadingDiv.className = 'message ai-message loading-message';
         loadingDiv.id = 'loadingMessage';
 
-        const avatar = document.createElement('div');
-        avatar.className = 'message-avatar';
-        avatar.textContent = '👩🏾‍🔬';
+
 
         const messageContent = document.createElement('div');
         messageContent.className = 'message-content';
         messageContent.innerHTML = '<p>Thinking...</p>';
 
-        loadingDiv.appendChild(avatar);
         loadingDiv.appendChild(messageContent);
         chatMessages.appendChild(loadingDiv);
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
-
-    // Function to send text message
-    /*function sendMessage() {
-        const message = userInput.value.trim();
-        if (!message) return;
-        
-        addMessage(message, true);
-        userInput.value = '';
-        
-        // Show loading
-        showLoading();
-        
-        // Simulate AI response for now (replace with actual API call later)
-        setTimeout(() => {
-            removeLoading();
-            addMessage("cool!", false);
-        }, 1000);
+    function removeLoading() {
+        const loading = document.getElementById('loadingMessage');
+        if (loading) {
+            loading.remove();
+        }
     }
-    */
-    function endConversation() {
+    function showRetryButton() {
+        let btn = document.getElementById('retryButton');
 
-        // remove the textarea
+        // create if it doesn't exist
+        if (!btn) {
+            btn = document.createElement('button');
+            btn.id = 'retryButton';
+            btn.className = 'retry-btn';
+            btn.textContent = 'Retry';
+
+            const textInputSection = document.getElementById('textInputSection');
+            if (textInputSection) {
+                textInputSection.appendChild(btn);
+            }
+        }
+
+        btn.style.display = 'block';
+
+        btn.onclick = resetSessionAndReload;
+    }
+
+    function showProgressionButton(container) {
+        if (!container) return;
+
+        let progressionButton = document.getElementById('progressionButton');
+        if (!progressionButton) {
+            progressionButton = document.createElement('button');
+            progressionButton.id = 'progressionButton';
+            progressionButton.className = 'progression-btn';
+            progressionButton.textContent = 'Check your progression!';
+        }
+
+        progressionButton.onclick = () => {
+            window.open(getProgressionUrl(), '_blank');
+        };
+
+        container.appendChild(progressionButton);
+    }
+
+    function endConversation() {
+        showRetryButton();
+        if (retryButton) {
+            retryButton.style.display = 'block';
+            retryButton.onclick = resetSessionAndReload;
+        }
+        const reviewAction = () => {
+            window.open(`/review.html?session=${SESSION_ID}&study=${studyKey}`, "_blank");
+        };
+
+        // remove text input (text mode)
         const textarea = document.getElementById("userInput");
         if (textarea) textarea.remove();
 
-        // make button full width
-        sendButton.style.width = "100%";
-        sendButton.style.display = "block";
+        // TEXT MODE BUTTON
+        if (sendButton) {
+            sendButton.style.width = "100%";
+            sendButton.style.display = "block";
+            sendButton.textContent = "Review how your game went";
+            sendButton.onclick = reviewAction;
+            showProgressionButton(textInputSection);
+        }
 
-        // change button behavior
-        sendButton.textContent = "Review how your game went";
-        sendButton.onclick = () => {
-            window.open(`/review.html?session=${SESSION_ID}&study=${studyKey}`, "_blank");
-        };
+        // VOICE MODE BUTTON
+        if (recordButton) {
+
+            // clone button to remove all recording event listeners
+            const newButton = recordButton.cloneNode(true);
+            recordButton.replaceWith(newButton);
+
+            // update references
+            const icon = newButton.querySelector('#recordIcon');
+            const text = newButton.querySelector('#recordText');
+
+            if (icon) icon.textContent = "📊";
+            if (text) text.textContent = "Review how your game went";
+
+            newButton.classList.remove('recording');
+
+            newButton.onclick = reviewAction;
+            showProgressionButton(voiceInputSection);
+        }
+
+        // clear recording status text
+        if (recordingStatus) {
+            recordingStatus.textContent = "";
+        }
     }
     async function sendTextMessage() {
         const message = userInput.value.trim();
         if (!message) return;
 
-        // Flag if the user said "surfing"
-        // const userSaidSurfing = message.toLowerCase().includes("surfing");
-        // if (userSaidSurfing) {
-        //         addMessage(message, true);
-        //         addMessage("We are done here.", false);
-        //         userInput.disabled = true;
-        //         sendButton.disabled = true;
-        //         return;
-        //     }
         addMessage(message, true);
         userInput.value = '';
         showLoading();
@@ -284,7 +352,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
             updateMood(data.mood); // ADD THIS
-
+            if (data.audio_url && !isMuted) {
+                const audio = new Audio(`${API_URL}${data.audio_url}`);
+                audio.play();
+            }
             aiResponses.push(reply);
 
         } catch (error) {
@@ -321,7 +392,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             console.log('[Voice] Response status:', response.status);
             console.log('[Voice] Response headers:', [...response.headers.entries()]);
-
+            if (response.status === 204) {
+                removeLoading();
+                return;
+            }
             if (!response.ok) {
                 const errorText = await response.text();
                 console.error('[Voice] API error response:', errorText);
@@ -336,22 +410,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const data = await response.json();
             console.log('[Voice] API response:', data);
+        removeLoading();
 
-            removeLoading();
-
-            // Add user's transcribed message
+        // Add user's transcribed message (only if non-empty)
+        if (data.transcript && data.transcript.trim() !== "") {
             addMessage(data.transcript, true);
             userMessages.push(data.transcript);
+        }
 
-            // Add AI's text response
-            addMessage(data.reply, false);
-            aiResponses.push(data.reply);
+        // Add AI's text response
+        const reply = data.reply;
 
-            // Add and play audio response
-            const audioUrl = `${API_URL}${data.audio_url}`;
-            console.log('[Voice] Audio URL:', audioUrl);
+        // detect end condition
+        if (data.conversation_complete || reply.trim().startsWith("[DONE]")) {
+            const clean = reply.replace(/^\[DONE\]\s*/, "");
+            addMessage(clean, false);
+            updateMood(data.mood);
+            endConversation();
+            return;
+        }
+
+        // normal response
+        addMessage(reply, false);
+        aiResponses.push(reply);
+
+        updateMood(data.mood);
+
+        const audioUrl = `${API_URL}${data.audio_url}`;
+        console.log('[Voice] Audio URL:', audioUrl);
+        if (!isMuted){
             addAudioMessage(audioUrl);
-
+        }
             // Increment voice exchange count and check if feedback should be shown
             voiceExchangeCount++;
             console.log('[Feedback] Voice exchanges:', voiceExchangeCount);
@@ -456,7 +545,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const recordingDuration = Date.now() - recordingStartTime;
             console.log('[Voice] Stopping recording... Duration:', recordingDuration, 'ms');
 
-            if (recordingDuration < 500) {
+            if (recordingDuration < 200) {
                 console.log('[Voice] Recording too short, ignoring');
                 mediaRecorder.stop();
                 isRecording = false;
@@ -628,14 +717,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    /* ===========================================================
-       CHANGE: Conversation Fullscreen Toggle (added)
-       - Added a fullscreen toggle button ('#fullscreenBtn') in the HTML.
-       - Implements Fullscreen API with fallbacks and sync with CSS class '.fullscreen'.
-       - Added event handlers and 'fullscreenchange' listener to update UI state.
-       - NOTE: No code was deleted; future deletions will be commented out instead.
-       =========================================================== */
-
+    
     // Fullscreen support for the chat conversation
     const fullscreenBtn = document.getElementById('fullscreenBtn');
     const chatContainer = document.querySelector('.chatbot-container');

@@ -3,12 +3,14 @@
 
 <head>
     <title>Game Review</title>
-    <!-- Shared stylesheet — includes .review-container, #score, and #feedback styles -->
 
+    <!-- Shared stylesheet — includes .review-container, #score, and #feedback styles -->
     <link rel="stylesheet" href="/css/style.css">
 
+    <!-- Markdown parser so AI feedback renders with headings, bold text, etc. -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
 <body>
     <!--
         Review Page
@@ -16,40 +18,69 @@
         Reads the session ID from the URL query string (?session=...)
         and fetches the final score + feedback from the backend API.
     -->
-    <div class="review-container">
-        <!-- Score display — populated by JS once the API responds -->
 
+    <div class="review-container">
+
+        <!-- Page title -->
         <h1>Game Review</h1>
 
+        <!-- Score display — populated by JS once the API responds -->
         <h2 id="score">Loading score...</h2>
 
-        <pre id="feedback">Generating review...</pre>
+        <!-- Feedback container.
+             Markdown returned from the API will be converted to HTML and injected here. -->
+        <div id="feedback">Generating review...</div>
+
+        <div class="review-actions">
+            <a class="btn-primary" id="progressionLink" href="/progression.html">Check your progression!</a>
+        </div>
 
     </div>
 
     <script>
         // Extract the session ID from the URL query string.
-        // The simulation page appends ?session=<id> when redirecting here
+        // The simulation page appends ?session=<id> when redirecting here.
         const params = new URLSearchParams(window.location.search);
         const sessionId = params.get("session");
+        const historyId = params.get("history_id");
+        const study = params.get("study");
+        const progressionLink = document.getElementById("progressionLink");
+
+        if (study) {
+            progressionLink.href = `/progression.html?study=${encodeURIComponent(study)}`;
+        }
+
+        const reviewEndpoint = historyId
+            ? `http://localhost:8080/api/stored_review/${historyId}`
+            : `http://localhost:8080/api/final_review/${sessionId}`;
 
         // Fetch the final review from the backend using the session ID.
-        // Returns: { score, checkpoints, feedback }
-        fetch(`http://localhost:8080/api/final_review/${sessionId}`)
+        // Expected response: { score, checkpoints, feedback }
+        fetch(reviewEndpoint)
             .then(res => res.json())
             .then(data => {
+
                 console.log("REVIEW DATA:", data);
 
+                // Update score display
                 document.getElementById("score").textContent =
                     `Score: ${data.score}`;
 
-                document.getElementById("feedback").textContent =
-                    data.feedback;
+                // Convert markdown feedback to HTML so formatting renders properly
+                const renderedFeedback = marked.parse(data.feedback || "");
+
+                // Inject rendered HTML into the page
+                document.getElementById("feedback").innerHTML =
+                    renderedFeedback;
             })
             .catch(err => {
+
                 // Log fetch/parse errors — consider adding a user-facing
                 // error message here so the page doesn't silently stay on "Loading..."
                 console.error(err);
+
+                document.getElementById("feedback").textContent =
+                    "Failed to load review.";
             });
     </script>
 

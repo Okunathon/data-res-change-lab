@@ -28,6 +28,7 @@
         <div class="input-mode-toggle">
                         <button id="textModeBtn" class="mode-btn active">💬 Text</button>
                         <button id="voiceModeBtn" class="mode-btn">🎤 Voice</button>
+
                     </div>
         <main class="simulation-main">
             <div class="chatbot-container">
@@ -37,11 +38,17 @@
                     - No code deleted; any removals would be commented out instead.
                 -->
                 <div class="chat-header">
+                    <div class="chat-header-left">
+                        <h2 id="caseStudyNameHeader">Dr. Jennifer Walker</h2>
+                    </div>
 
-                    <!-- Fullscreen control (restored) -->
+                    
+
                     <div class="chat-controls">
+                        <button id="muteBtn" class="btn-mute" title="Toggle voice">🔊</button>
                         <button id="fullscreenBtn" class="btn-fullscreen" title="Toggle fullscreen">⤢ Fullscreen</button>
                     </div>
+
                 </div>
                 
                 <div class="chat-messages" id="chatMessages">
@@ -63,6 +70,7 @@
                             rows="3"
                         ></textarea>
                         <button id="sendButton" class="btn-send">Send</button>
+                        <button id="retryButton" class="retry-btn" style="display: none;"> Retry </button>
                     </div>
                     
                     <div id="voiceInputSection" style="display: none; justify-content: center;">
@@ -70,7 +78,9 @@
                             <span id="recordIcon">🎤</span>
                             <span id="recordText">Hold to Record</span>
                         </button>
+                        <button id="retryButton" class="retry-btn" style="display: none;"> Retry </button>
                         <div id="recordingStatus" class="recording-status"></div>
+                        <button id="retryButton" class="retry-btn" style="display: none;"> Retry </button>
                     </div>
                 </div>
             </div>

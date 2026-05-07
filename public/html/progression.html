@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Session Progression</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="review-container progression-container">
+        <h1>Check Your Progression</h1>
+        <p class="progression-intro">Review your previous sessions, compare scores, and scan the main coaching takeaway from each attempt.</p>
+
+        <div class="progression-table-wrap">
+            <table class="progression-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Case Study</th>
+                        <th>Score</th>
+                        <th>Session Snapshot</th>
+                        <th>Full Review</th>
+                    </tr>
+                </thead>
+                <tbody id="progressionBody">
+                    <tr>
+                        <td colspan="5" class="progression-empty">Loading previous sessions...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const caseStudyTitles = {
+            template1: 'Dr. Jennifer Walker',
+            template2: 'Case Study Template 2',
+            template3: 'Case Study Template 3'
+        };
+
+        const params = new URLSearchParams(window.location.search);
+        const study = params.get('study');
+        const tbody = document.getElementById('progressionBody');
+
+        function formatDate(value) {
+            if (!value) return 'Unknown';
+            const date = new Date(value);
+            return date.toLocaleString();
+        }
+
+        function getCaseStudyLabel(caseStudy) {
+            return caseStudyTitles[caseStudy] || caseStudy || 'Unknown';
+        }
+
+        function buildReviewLink(session) {
+            const query = new URLSearchParams({ history_id: session.id });
+            if (study) {
+                query.set('study', study);
+            }
+            return `/review.html?${query.toString()}`;
+        }
+
+        fetch('http://localhost:8080/api/session_history')
+            .then(response => response.json())
+            .then(data => {
+                const sessions = (data.sessions || []).filter(session => !study || session.case_study === study);
+
+                if (!sessions.length) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="progression-empty">No saved sessions yet. Finish a round and press Retry to store it here.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = sessions.map(session => `
+                    <tr>
+                        <td>${formatDate(session.created_at)}</td>
+                        <td>${getCaseStudyLabel(session.case_study)}</td>
+                        <td>${session.score}/${session.max_score}</td>
+                        <td>${session.progression_summary}</td>
+                        <td><a class="progression-link" href="${buildReviewLink(session)}">View criticism</a></td>
+                    </tr>
+                `).join('');
+            })
+            .catch(error => {
+                console.error(error);
+                tbody.innerHTML = '<tr><td colspan="5" class="progression-empty">Failed to load session history.</td></tr>';
+            });
+    </script>
+</body>
+</html>

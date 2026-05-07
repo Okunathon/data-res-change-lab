@@ -202,11 +202,11 @@ Press `Ctrl + C` in each terminal window
 ## Future Enhancements
 
 - [ ] Database integration (SQLite/PostgreSQL) for conversation history
-- [ ] Audio file cleanup based on playback status
 - [ ] Additional donor personas (template2, template3)
 - [ ] Analytics dashboard for pitch performance
 - [ ] User accounts and session persistence
-- [ ] Export conversation transcripts
+- [ ] Improve conversation flow
+- [ ] Add decimal system for checkpoints
 
 ## License
 
