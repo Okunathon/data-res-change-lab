@@ -31,10 +31,6 @@
              Markdown returned from the API will be converted to HTML and injected here. -->
         <div id="feedback">Generating review...</div>
 
-        <div class="review-actions">
-            <a class="btn-primary" id="progressionLink" href="/progression.html">Check your progression!</a>
-        </div>
-
     </div>
 
     <script>
@@ -42,21 +38,10 @@
         // The simulation page appends ?session=<id> when redirecting here.
         const params = new URLSearchParams(window.location.search);
         const sessionId = params.get("session");
-        const historyId = params.get("history_id");
-        const study = params.get("study");
-        const progressionLink = document.getElementById("progressionLink");
-
-        if (study) {
-            progressionLink.href = `/progression.html?study=${encodeURIComponent(study)}`;
-        }
-
-        const reviewEndpoint = historyId
-            ? `http://localhost:8080/api/stored_review/${historyId}`
-            : `http://localhost:8080/api/final_review/${sessionId}`;
 
         // Fetch the final review from the backend using the session ID.
         // Expected response: { score, checkpoints, feedback }
-        fetch(reviewEndpoint)
+        fetch(`http://localhost:8080/api/final_review/${sessionId}`)
             .then(res => res.json())
             .then(data => {
 

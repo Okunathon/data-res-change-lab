@@ -503,18 +503,37 @@ def funding_guidance(state: dict, new_hits: list) -> str | None:
         state["funding_committed"] = True
         return (
             "The user has made the funding ask. You are willing to commit funding now. "
-            f"State your intent to give ${offer:,}, then request next steps: "
-            "a 1-page summary, budget breakdown, timeline, and reporting cadence. "
-            "Suggest scheduling a follow-up."
+            f"State your intent to give ${offer:,}. Keep the ending interactive by asking one focused follow-up question "
+            "about execution, reporting cadence, timeline, or immediate next steps rather than ending the conversation right away. "
+            "Signal that you only have a little time left and want to use the final exchange productively."
         )
 
     else:
         state["funding_committed"] = False
         return (
             "The user has made the funding ask. You are not ready to commit money today. "
-            "Respond professionally and keep it open-ended: request a written proposal, "
-            "specific metrics, budget detail, and suggest a follow-up meeting."
+            "Keep the ending interactive by asking one focused follow-up question about metrics, budget detail, timeline, or reporting, "
+            "then make clear that you are nearing the end of the meeting and want the final exchange to clarify next steps."
         )
+
+
+def build_wrapup_guidance(state: dict) -> str | None:
+    turns_left = state.get("wrapup_turns_left", 0)
+    if turns_left <= 0:
+        return None
+
+    if turns_left == 2:
+        return (
+            "You are in the first wrap-up turn after the funding ask. Keep the conversation interactive by asking exactly one "
+            "brief, substantive follow-up question that helps you decide or confirms next steps. Mention that you only have a few minutes left, "
+            "but do not end the meeting yet."
+        )
+
+    return (
+        "You are in the final wrap-up turn. Briefly acknowledge the user's last answer, give a concise conclusion about whether you are "
+        "moving forward now or need materials first, and close the meeting politely with a concrete next step. Make it feel like a natural end, "
+        "not an abrupt cutoff. Do not ask a new broad question."
+    )
 
 
 def get_system_prompt(case_study: str) -> str:
@@ -639,7 +658,7 @@ def chat():
         if should_end_conversation(state):
             return jsonify({
                 "transcript": transcript,
-                "reply": "We’ve wrapped up. Please coordinate next steps with my office and send the written materials.",
+                "reply": "We’re out of time, but this has been helpful. Please send the written materials and coordinate next steps with my office.",
                 "audio_url": None,
                 "score": state["score"],
                 "max_score": MAX_SCORE,
@@ -700,9 +719,14 @@ def chat():
         note = funding_guidance(state, new_hits)
 
         messages_for_llm = conversations[session_id]
+        extra_notes = []
+        wrapup_note = build_wrapup_guidance(state)
         if note:
-            messages_for_llm = conversations[session_id] + \
-                [{"role": "system", "content": note}]
+            extra_notes.append({"role": "system", "content": note})
+        if wrapup_note:
+            extra_notes.append({"role": "system", "content": wrapup_note})
+        if extra_notes:
+            messages_for_llm = conversations[session_id] + extra_notes
 
         completion = client.chat.completions.create(
             model="gpt-4o-mini",
@@ -799,7 +823,7 @@ def text_chat():
         if should_end_conversation(state):
             return jsonify({
                 "message": user_text,
-                "reply": "[DONE] We’ve wrapped up. Please coordinate next steps with my office and send the written materials.",
+                "reply": "[DONE] We’re out of time, but this has been helpful. Please send the written materials and coordinate next steps with my office.",
                 "score": state["score"],
                 "max_score": MAX_SCORE,
                 "mood": "neutral",
@@ -859,9 +883,14 @@ def text_chat():
         note = funding_guidance(state, new_hits)
 
         messages_for_llm = conversations[session_id]
+        extra_notes = []
+        wrapup_note = build_wrapup_guidance(state)
         if note:
-            messages_for_llm = conversations[session_id] + \
-                [{"role": "system", "content": note}]
+            extra_notes.append({"role": "system", "content": note})
+        if wrapup_note:
+            extra_notes.append({"role": "system", "content": wrapup_note})
+        if extra_notes:
+            messages_for_llm = conversations[session_id] + extra_notes
 
         completion = client.chat.completions.create(
             model="gpt-4o-mini",

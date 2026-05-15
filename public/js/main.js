@@ -41,12 +41,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     async function resetSession() {
-        try {
+        try {  // try allows you to try this without crashing the program
             const resetResponse = await fetch(`${API_URL}/api/reset/${SESSION_ID}`, {
-                method: 'POST'
+                method: 'POST' 
             });
-
-            if (!resetResponse.ok) {
+            
+            if (!resetResponse.ok) { // if the response is not ok, it will log a warning but continue running the program
                 console.warn('[Init] Session reset failed with status:', resetResponse.status);
             }
         } catch (error) {
@@ -55,8 +55,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     async function resetSessionAndReload() {
-        await resetSession();
-        window.location.reload();
+        await resetSession(); // wait until this ends
+        window.location.reload(); // for you to reload
     }
 
     await resetSession();
@@ -71,6 +71,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const messageCountEl = document.getElementById('messageCount');
     const caseStudyNameEl = document.getElementById('caseStudyName');
     const muteBtn = document.getElementById("muteBtn");
+    const chatContainer = document.querySelector('.chatbot-container');
 
     if (muteBtn) {
         muteBtn.addEventListener("click", () => {
@@ -91,6 +92,54 @@ document.addEventListener('DOMContentLoaded', async () => {
     let messageCount = 0;
     let currentMode = 'text';
     const studyKey = getCaseStudyFromURL();
+    const moodVideoSources = {
+        happy: '/Jennifer_Talking.mp4',
+        sad: '/Jennifer_Angry_Idle.mp4',
+        neutral: '/Jennifer_Blinking.mp4',
+        loading: '/Jennifer_Bored_Talking2.mp4'
+    };
+    let activeMood = 'neutral';
+
+    function initializeMoodVideos() {
+        if (!chatContainer || chatContainer.querySelector('.mood-video-layer')) {
+            return;
+        }
+
+        const layer = document.createElement('div');
+        layer.className = 'mood-video-layer';
+
+        Object.entries(moodVideoSources).forEach(([mood, src]) => {
+            const video = document.createElement('video');
+            video.className = 'mood-video';
+            video.dataset.mood = mood;
+            video.src = src;
+            video.autoplay = true;
+            video.loop = true;
+            video.muted = true;
+            video.playsInline = true;
+            video.preload = 'auto';
+            if (mood === activeMood) {
+                video.classList.add('is-active');
+            }
+            layer.appendChild(video);
+        });
+
+        chatContainer.insertBefore(layer, chatContainer.firstChild);
+    }
+
+    function setMoodVideoOpacity(mood) {
+        if (!chatContainer) return;
+
+        const nextMood = moodVideoSources[mood] ? mood : 'neutral';
+        activeMood = nextMood;
+
+        const videos = chatContainer.querySelectorAll('.mood-video');
+        videos.forEach((video) => {
+            video.classList.toggle('is-active', video.dataset.mood === nextMood);
+        });
+    }
+
+    initializeMoodVideos();
 
     // Update case study name
     if (caseStudyNameEl) {
@@ -122,15 +171,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     // mood updater
     function updateMood(mood) {
         console.log('updateMood called with:', mood);
-        const container = document.querySelector('.chatbot-container');
-        console.log('container found:', container);
-        if (!container) return;
+        console.log('container found:', chatContainer);
+        if (!chatContainer) return;
 
-        const valid = ['happy', 'sad', 'neutral'];
+        const valid = ['happy', 'sad', 'neutral', 'loading'];
         if (!valid.includes(mood)) mood = 'neutral';
 
-        container.style.backgroundImage = `url("/${mood}.png")`;
-        console.log('background set to:', container.style.backgroundImage);
+        setMoodVideoOpacity(mood);
+        console.log('video mood set to:', mood);
     }
 
     // Function to add a message to the chat
@@ -201,10 +249,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Function to show loading indicator
     function showLoading() {
-        const container = document.querySelector('.chatbot-container');
-        if (container) {
-            container.style.backgroundImage = 'url("/e.png")';
-        }
+        updateMood('loading');
 
         const loadingDiv = document.createElement('div');
         loadingDiv.className = 'message ai-message loading-message';
@@ -225,6 +270,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (loading) {
             loading.remove();
         }
+        updateMood(activeMood === 'loading' ? 'neutral' : activeMood);
     }
     function showRetryButton() {
         let btn = document.getElementById('retryButton');
@@ -720,7 +766,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Fullscreen support for the chat conversation
     const fullscreenBtn = document.getElementById('fullscreenBtn');
-    const chatContainer = document.querySelector('.chatbot-container');
 
     async function enterFullscreen(targetEl = chatContainer) {
         if (!targetEl) return;
